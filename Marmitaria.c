@@ -1,17 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include "LocalStorage.h"
 #include "Marmitaria.h"
 
+
+void* lerMarmita(char* linha){
+    Marmita* marmita = malloc(sizeof(Marmita));
+
+    sscanf(linha,"%d %s %lf %lf %d",
+           &marmita->codigo, marmita->descricao, &marmita->preco, &marmita->custo, &marmita->estoque);
+
+    int index = 0;
+    char c;
+    while((c=marmita->descricao[index]) !='\0') {
+        if (c == '@') {
+            marmita->descricao[index] = ' ';
+        }
+        index++;
+    }
+    return marmita;
+}
+
+void escreverMarmita(void* elem, char* buffer){
+    Marmita marmita = ((Marmita*) elem)[0];
+
+    int index = 0;
+    char c;
+    while((c=marmita.descricao[index]) !='\0'){
+        if (c == ' '){
+            marmita.descricao[index] ='@';
+        }
+        index++;
+    }
+
+    sprintf(buffer,"%d %s %.3lf %.3lf %d",
+           marmita.codigo, marmita.descricao, marmita.preco, marmita.custo, marmita.estoque);
+}
+
+void escreverVenda(void* elem, char* buffer){
+    Venda venda = ((Venda*) elem)[0];
+
+    time_t tempo;
+    time(&tempo);
+    struct tm tm = *localtime(&tempo);
+
+    sprintf(buffer,"%d/%02d/%02d => %d %d",
+            tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday, venda.codigoMarmita, venda.quantidade);
+}
+
 void menu(){
-
-    //ArrayList* marmitas = carregar("caminho para o arquivo", ler);
-
-
-    ArrayList* marmitas = criarLista(sizeof(Marmita));
+    ArrayList* marmitas = carregar("../estoque.dat", lerMarmita, sizeof(Marmita));
     ArrayList* vendas = criarLista(sizeof(Venda));
-
-
 
     int opcao, exit = 0;
     do {
@@ -58,6 +99,8 @@ void menu(){
 
     } while(!exit);
 
+    salvar("../estoque.dat", marmitas, escreverMarmita, 'n');
+    salvar("../vendas.dat", vendas, escreverVenda, 'y');
     freeAll(marmitas);
     freeAll(vendas);
 }
@@ -94,21 +137,6 @@ int compararVenda(void* va, void* vb){
     if (a.codigoMarmita < b.codigoMarmita)  return -1;
     return 0;
 }
-
-void* ler (char* linha){
-    //CRIAR MARMITA COM MALLOC
-    //recebe uma linha
-    //converte a linha para marmita
-    //retorna o endereco
-    return NULL;
-}
-
-char* escrever(void* elem){
-    //converter elem para marmita
-    //retornar uma string
-    return "";
-}
-
 
 //Funções definidas no arquivo cabeçalho (marmitaria.h)
 void imprimir_marmita (Marmita marmita){
